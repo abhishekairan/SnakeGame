@@ -4,7 +4,6 @@ Made with the help of youtube but the code is rewriten to help further developme
 Project Scope:
 > Displaying score
 > Better Graphics
-> Difficulty selector
 > User database
 > PVP support 
 
@@ -14,8 +13,21 @@ Instagram ID: abhishek_airan_
 If this code helps you make me know :)
 """
 
-from tkinter import * 
+from tkinter import *
+import sys 
+import os
 import random
+
+
+#https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
 
 
 # Constant variables for setting
@@ -28,12 +40,66 @@ FOOD_COLOR = "#FF0000"
 BACKGROUND_COLOR = "#000000"
 
 
+# class for functions which will control the flow of data
+def beasy(window: Tk):
+    for item in window.winfo_children():
+        item.destroy()
+    game_fram = GameFram(window)
+
+def bmedium(window: Tk):
+    for item in window.winfo_children():
+        item.destroy()
+    game_fram = GameFram(window)
+    
+def bhard(window: Tk):
+    for item in window.winfo_children():
+        item.destroy()
+    game_fram = GameFram(window)
+
+def bretry(window: Tk):
+    for item in window.winfo_children():
+        item.destroy()
+    game_fram = GameFram(window)
+
+def bmenu(window: Tk):
+    for item in window.winfo_children():
+        item.destroy()
+    game_fram = MenuUI(window)
+
+
+# class for main menu where player can select difficulty
+class MenuUI(Frame):
+    def __init__(self,window:Tk):
+        super().__init__(master = window,background='#333333',width=GAME_WIDTH,height=GAME_HIGHT)
+        window.configure(background='#333333')
+        
+        # frame for buttons 
+        window.columnconfigure(0,weight=1,uniform='a')
+        window.columnconfigure(1,weight=1,uniform='a')
+        window.columnconfigure(2,weight=1,uniform='a')
+        window.rowconfigure(0,weight=1,uniform='a')
+        window.rowconfigure(1,weight=1,uniform='a')
+        window.rowconfigure(2,weight=1,uniform='a')
+
+        # buttons
+        self.easyB = Button(window,text="Easy",background='#555555',fg='#00ff00',padx=50,pady=50,font='arial 15',command= lambda: beasy(window))
+        self.easyB.grid(column=0,row=1,sticky='e')
+        self.mediumB = Button(window,text="Medium",background='#555555',fg='yellow',padx=50,pady=50,font='arial 15', command= lambda: bmedium(window))
+        self.mediumB.grid(column=1,row=1)
+        self.hardB = Button(window,text='Hard',background='#555555',fg='red',padx=50,pady=50,font='arial 15', command=lambda: bhard(window))
+        self.hardB.grid(column=2,row=1,sticky='w')
+        self.label = Label(window,text="Select Game Diffculty",background='#333333',font='arial 20',fg='cyan')
+        self.label.grid(row=0,column=0,columnspan=3)
+
+
+
 # class for main to be executed
 class GameFram(Frame):
-    def __init__(self, master: Tk):
+    def __init__(self, master: Tk,difficulty: int = 0,food: int = 1):
         super().__init__(master=master)
 
         # Setting up some variables which will control the snake 
+        self.difficulty = difficulty
         self.direction = 'right'
         self.score = 0
         self.speed = 250
@@ -112,7 +178,9 @@ class GameFram(Frame):
             self.score += 1 # increase the score
             self.canvas.delete('food') # delete the food
             food = self.Food(self.canvas) # create a new food on canvas
-            self.speed -= 5 # increasing speed
+            if self.difficulty==0: self.speed -= 2 # increasing speed on easy difficulty
+            if self.difficulty==1: self.speed -= 5 # increasing speed on medium difficulty
+            if self.difficulty==2: self.speed -= 8 # increasing speed on hard difficulty
         else:
             # if snake don't eat the food...
             del snake.coordinates[-1] # delete the snake last body part's coordinates from list
@@ -158,7 +226,12 @@ class GameFram(Frame):
 
     # function to end game (this just show the game over text)
     def game_over(self):
-        self.canvas.create_text(self.canvas.winfo_width()//2,self.canvas.winfo_height()//2,text="Game Over",fill='#FF0000',font=('consolas',70),tag='gameover')
+        self.canvas.create_text(self.canvas.winfo_width()//2,self.canvas.winfo_height()//2-50,text=f"Your Score:{self.score}",fill='#FF0000',font=('consolas',60),tag='gameover')
+        self.canvas.create_text(self.canvas.winfo_width()//2,self.canvas.winfo_height()//2+50,text=f"Game Over",fill='#FF0000',font=('consolas',70),tag='gameover')
+        self.retryB = Button(window,text="Retry",font='arial 16',background='#555555',fg='#00ff59',padx=20,pady=5,command=lambda: bretry(window))
+        self.menuB = Button(window,text="Menu",font='arial 16',background='#555555',fg='#00ff59',padx=20,pady=5,command=lambda: bmenu(window))
+        self.retryB.place(x=350,y=380)
+        self.menuB.place(x=250,y=380)
 
 
 # Setting window with tkinter
@@ -176,7 +249,6 @@ win_height = window.winfo_height() #getting windows width
 x = int((screen_width/2)-(win_width/2)) #getting middle x-axis on scrren (not 100% accurate)
 y = int((screen_height/2)-(win_height/2)) #getting middle y-axis on scrren (not 100% accurate)
 window.geometry(f"{win_width}x{win_height}+{x}+{y}") # setting up new geometry of the window
-
-game_fram = GameFram(window) #showing game canvas
-
+game_fram = MenuUI(window) #showing main menu
+# window.overrideredirect(True)
 window.mainloop() # running the window
