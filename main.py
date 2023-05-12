@@ -95,7 +95,7 @@ class MenuUI(Frame):
 
 # class for main to be executed
 class GameFram(Frame):
-    def __init__(self, master: Tk,difficulty: int = 0,food: int = 1):
+    def __init__(self, master: Tk,difficulty: int = 0):
         super().__init__(master=master)
 
         # Setting up some variables which will control the snake 
@@ -119,7 +119,8 @@ class GameFram(Frame):
         window.bind('<s>', lambda event:self.change_direction('down')) # 's' key for down navigation
 
         # Setting up food and snake
-        self.food = self.Food(self.canvas) # food
+        if self.difficulty==0: self.food = self.Food(self.canvas,3) # food
+        else: self.food = self.Food(self.canvas)
         self.snake = self.Snake(self.canvas) # snake
         # turning on game 
         self.next_turn(self.snake,self.food)
@@ -129,13 +130,22 @@ class GameFram(Frame):
     # Defining Classes
 
     class Food: # class for food
-        def __init__(self,canvas:Canvas):
-            # getting random coordinates to place the food
-            x = int(random.randint(0,(GAME_WIDTH//SPACE_SIZE)-1)) * SPACE_SIZE # x coordinate for food
-            y = int(random.randint(0,(GAME_HIGHT//SPACE_SIZE)-1)) * SPACE_SIZE # y coordinate for food
-            self.coordiantes = [x,y] # adding this coordinate in list to use them later too
+        def __init__(self,canvas:Canvas,count: int = 1):
+            self.canvas = canvas
+            self.count = count
+            self.currentFood = 0
+            self.coordiantes = []
+            self.create_food()
 
-            canvas.create_oval(x , y, x+SPACE_SIZE, y+SPACE_SIZE, fill=FOOD_COLOR, tag = 'food') # creating food
+        def create_food(self):
+            # getting random coordinates to place the food
+            while self.currentFood<self.count:
+                x = int(random.randint(0,(GAME_WIDTH//SPACE_SIZE)-1)) * SPACE_SIZE # x coordinate for food
+                y = int(random.randint(0,(GAME_HIGHT//SPACE_SIZE)-1)) * SPACE_SIZE # y coordinate for food
+                self.coordiantes.append((x,y)) # adding this coordinate in list to use them later too
+                self.canvas.create_oval(x , y, x+SPACE_SIZE, y+SPACE_SIZE, fill=FOOD_COLOR, tag = f'food({x},{y})') # creating food
+                self.currentFood += 1
+
 
     class Snake: # snake class
         def __init__(self,canvas:Canvas):
@@ -159,25 +169,51 @@ class GameFram(Frame):
         x,y = snake.coordinates[0] # getting snake head coordinates
 
         # setting up the coords for making the next body on canvas
-        if self.direction == 'right': 
-            x += SPACE_SIZE
+        if self.direction == 'right':
+            if self.difficulty == 0 or self.difficulty==1:
+                if x==GAME_WIDTH-SPACE_SIZE:
+                    x = 0
+                else:
+                    x+=SPACE_SIZE
+            else: 
+                x += SPACE_SIZE
         elif self.direction == 'left':
-            x -= SPACE_SIZE
+            if self.difficulty == 0 or self.difficulty == 1:
+                if x==0:
+                    x = GAME_WIDTH-SPACE_SIZE
+                else:
+                    x -= SPACE_SIZE
+            else:
+                x -= SPACE_SIZE
         elif self.direction == 'up':
-            y -= SPACE_SIZE
+            if self.difficulty == 0 or self.difficulty == 1:
+                if y == 0:
+                    y = GAME_HIGHT-SPACE_SIZE
+                else:
+                    y -= SPACE_SIZE
+            else:
+                y -= SPACE_SIZE
         elif self.direction == 'down':
-            y += SPACE_SIZE
-
+            if self.difficulty == 0 or self.difficulty==1:
+                if y == GAME_HIGHT-SPACE_SIZE:
+                    y = 0
+                else:
+                    y += SPACE_SIZE
+            else:
+                y += SPACE_SIZE
+        print(snake.coordinates,x,y)
         snake.coordinates.insert(0,(x,y)) # setting the new coords of the head
         square = self.canvas.create_rectangle(x,y,x+SPACE_SIZE,y+SPACE_SIZE,fill = SNAKE_COLOR) # creating the new head
         snake.square.insert(0,square) # adding new head coords to the list
 
         # checking if snake eats the food
-        if x==food.coordiantes[0] and y==food.coordiantes[1]:
+        if (x,y) in food.coordiantes:
             # if eats the food then...
             self.score += 1 # increase the score
-            self.canvas.delete('food') # delete the food
-            food = self.Food(self.canvas) # create a new food on canvas
+            self.canvas.delete(f'food({x},{y})') # delete the food
+            food.coordiantes.remove((x,y))
+            food.currentFood -= 1
+            food.create_food() # create a new food on canvas
             if self.difficulty==0: self.speed -= 2 # increasing speed on easy difficulty
             if self.difficulty==1: self.speed -= 5 # increasing speed on medium difficulty
             if self.difficulty==2: self.speed -= 8 # increasing speed on hard difficulty
@@ -213,14 +249,20 @@ class GameFram(Frame):
     # function to check if snake collied from itself or walls
     def check_collision(self,snake:Snake):
         x, y = snake.coordinates[0] # getting snake head coordinates
-        if x<0 or x>=GAME_WIDTH: # if head hits the right or left walls 
-            return True 
-        elif y<0 or y>=GAME_HIGHT: # if head hits the upper or lower walls 
-            return True
-        # if head hits snake another body part
-        for body in snake.coordinates[1:]: 
+        for body in snake.coordinates[1:]:
             if x == body[0] and y == body[1]: 
+                print('snake hit its body')
                 return True
+        if self.difficulty == 0 or self.difficulty == 1:
+            return False
+        else:
+            if x<0 or x>=GAME_WIDTH: # if head hits the right or left walls 
+                print('snake it side wall') 
+                return True 
+            elif y<0 or y>=GAME_HIGHT: # if head hits the upper or lower walls 
+                print('snake hit upper and lower wall')
+                return True
+        # if head hits snake another body part
         # if head does not collide
         return False
 
