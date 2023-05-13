@@ -49,12 +49,12 @@ def beasy(window: Tk):
 def bmedium(window: Tk):
     for item in window.winfo_children():
         item.destroy()
-    game_fram = GameFram(window)
+    game_fram = GameFram(window,1)
     
 def bhard(window: Tk):
     for item in window.winfo_children():
         item.destroy()
-    game_fram = GameFram(window)
+    game_fram = GameFram(window,2)
 
 def bretry(window: Tk):
     for item in window.winfo_children():
@@ -120,6 +120,7 @@ class GameFram(Frame):
 
         # Setting up food and snake
         if self.difficulty==0: self.food = self.Food(self.canvas,3) # food
+        elif self.difficulty == 1: self.food = self.Food(self.canvas)
         else: self.food = self.Food(self.canvas)
         self.snake = self.Snake(self.canvas) # snake
         # turning on game 
@@ -201,7 +202,6 @@ class GameFram(Frame):
                     y += SPACE_SIZE
             else:
                 y += SPACE_SIZE
-        print(snake.coordinates,x,y)
         snake.coordinates.insert(0,(x,y)) # setting the new coords of the head
         square = self.canvas.create_rectangle(x,y,x+SPACE_SIZE,y+SPACE_SIZE,fill = SNAKE_COLOR) # creating the new head
         snake.square.insert(0,square) # adding new head coords to the list
@@ -250,17 +250,14 @@ class GameFram(Frame):
     def check_collision(self,snake:Snake):
         x, y = snake.coordinates[0] # getting snake head coordinates
         for body in snake.coordinates[1:]:
-            if x == body[0] and y == body[1]: 
-                print('snake hit its body')
+            if x == body[0] and y == body[1]:
                 return True
         if self.difficulty == 0 or self.difficulty == 1:
             return False
         else:
             if x<0 or x>=GAME_WIDTH: # if head hits the right or left walls 
-                print('snake it side wall') 
                 return True 
-            elif y<0 or y>=GAME_HIGHT: # if head hits the upper or lower walls 
-                print('snake hit upper and lower wall')
+            elif y<0 or y>=GAME_HIGHT: # if head hits the upper or lower walls
                 return True
         # if head hits snake another body part
         # if head does not collide
